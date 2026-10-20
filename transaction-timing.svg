@@ -1,0 +1,88 @@
+<svg width="1400" height="760" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#1f2937"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #111827; }
+      .label { font: 700 20px Arial, sans-serif; fill: #111827; }
+      .small { font: 500 16px Arial, sans-serif; fill: #374151; }
+      .box { fill: #eef6ff; stroke: #2563eb; stroke-width: 2; }
+      .box2 { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+      .box3 { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
+      .box4 { fill: #fdf2f8; stroke: #db2777; stroke-width: 2; }
+      .line { stroke: #1f2937; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="700" y="42" text-anchor="middle" class="title">Transaction Timing Diagram</text>
+
+  <!-- Signals -->
+  <rect x="80" y="90" width="220" height="520" rx="12" class="box"/>
+  <text x="190" y="125" text-anchor="middle" class="label">Master</text>
+  <text x="190" y="170" text-anchor="middle" class="small">m_req</text>
+  <text x="190" y="230" text-anchor="middle" class="small">m_we / addr</text>
+  <text x="190" y="290" text-anchor="middle" class="small">m_ack</text>
+  <text x="190" y="350" text-anchor="middle" class="small">rdata</text>
+
+  <rect x="360" y="90" width="220" height="520" rx="12" class="box2"/>
+  <text x="470" y="125" text-anchor="middle" class="label">Arbiter</text>
+  <text x="470" y="170" text-anchor="middle" class="small">req</text>
+  <text x="470" y="230" text-anchor="middle" class="small">grant</text>
+  <text x="470" y="290" text-anchor="middle" class="small">ack</text>
+
+  <rect x="640" y="90" width="220" height="520" rx="12" class="box3"/>
+  <text x="750" y="125" text-anchor="middle" class="label">Decoder / Bus</text>
+  <text x="750" y="170" text-anchor="middle" class="small">selected address</text>
+  <text x="750" y="230" text-anchor="middle" class="small">slave select</text>
+  <text x="750" y="290" text-anchor="middle" class="small">bus active</text>
+
+  <rect x="920" y="90" width="260" height="520" rx="12" class="box4"/>
+  <text x="1050" y="125" text-anchor="middle" class="label">Slave</text>
+  <text x="1050" y="170" text-anchor="middle" class="small">sel & we</text>
+  <text x="1050" y="230" text-anchor="middle" class="small">memory read/write</text>
+  <text x="1050" y="290" text-anchor="middle" class="small">ack</text>
+  <text x="1050" y="350" text-anchor="middle" class="small">rdata</text>
+
+  <!-- Timing rows -->
+  <path d="M80 470 H1320" class="line"/>
+  <path d="M80 420 H1320" class="line"/>
+  <path d="M80 370 H1320" class="line"/>
+  <path d="M80 310 H1320" class="line"/>
+  <path d="M80 250 H1320" class="line"/>
+  <path d="M80 190 H1320" class="line"/>
+
+  <!-- Request -->
+  <rect x="120" y="160" width="150" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <text x="195" y="180" text-anchor="middle" class="small">1</text>
+
+  <!-- Grant -->
+  <rect x="400" y="220" width="140" height="30" fill="#dcfce7" stroke="#16a34a" stroke-width="2" rx="6"/>
+  <text x="470" y="240" text-anchor="middle" class="small">grant</text>
+
+  <!-- Data transfer -->
+  <rect x="680" y="280" width="160" height="30" fill="#ffedd5" stroke="#ea580c" stroke-width="2" rx="6"/>
+  <text x="760" y="300" text-anchor="middle" class="small">addr + wdata</text>
+
+  <!-- Slave response -->
+  <rect x="980" y="340" width="160" height="30" fill="#fce7f3" stroke="#db2777" stroke-width="2" rx="6"/>
+  <text x="1060" y="360" text-anchor="middle" class="small">ack + rdata</text>
+
+  <!-- ack back to master -->
+  <rect x="160" y="280" width="150" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+  <text x="235" y="300" text-anchor="middle" class="small">ack</text>
+
+  <!-- arrows -->
+  <path d="M270 175 L360 175" class="line"/>
+  <path d="M580 235 L640 235" class="line"/>
+  <path d="M860 295 L920 295" class="line"/>
+  <path d="M1080 370 L980 370 L980 290 L320 290" class="line"/>
+
+  <!-- timing labels -->
+  <text x="90" y="640" class="small">t0: request</text>
+  <text x="260" y="640" class="small">t1: arbitration</text>
+  <text x="470" y="640" class="small">t2: bus transfer</text>
+  <text x="690" y="640" class="small">t3: slave response</text>
+  <text x="960" y="640" class="small">t4: ack + data return</text>
+
+</svg>

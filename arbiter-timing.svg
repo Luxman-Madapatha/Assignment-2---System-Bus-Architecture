@@ -1,0 +1,83 @@
+<svg width="1400" height="760" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#1f2937"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #111827; }
+      .label { font: 700 18px Arial, sans-serif; fill: #111827; }
+      .small { font: 500 16px Arial, sans-serif; fill: #374151; }
+      .box { fill: #ecfdf5; stroke: #16a34a; stroke-width: 2; }
+      .box2 { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
+      .line { stroke: #1f2937; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="700" y="42" text-anchor="middle" class="title">Arbiter Timing and Grant Behavior</text>
+
+  <!-- M0 and M1 requests -->
+  <rect x="110" y="120" width="210" height="200" rx="12" class="box2"/>
+  <text x="215" y="155" text-anchor="middle" class="label">Master 0</text>
+  <text x="215" y="195" text-anchor="middle" class="small">req[0] = 1</text>
+  <text x="215" y="225" text-anchor="middle" class="small">M0 has priority</text>
+  <text x="215" y="255" text-anchor="middle" class="small">grant = 01</text>
+  <text x="215" y="285" text-anchor="middle" class="small">ack clears bus</text>
+
+  <rect x="440" y="120" width="210" height="200" rx="12" class="box2"/>
+  <text x="545" y="155" text-anchor="middle" class="label">Master 1</text>
+  <text x="545" y="195" text-anchor="middle" class="small">req[1] = 1</text>
+  <text x="545" y="225" text-anchor="middle" class="small">waits while M0 holds</text>
+  <text x="545" y="255" text-anchor="middle" class="small">grant = 10</text>
+  <text x="545" y="285" text-anchor="middle" class="small">only after release</text>
+
+  <!-- Arbiter -->
+  <rect x="760" y="150" width="240" height="180" rx="12" class="box"/>
+  <text x="880" y="185" text-anchor="middle" class="label">Arbiter Logic</text>
+  <text x="880" y="220" text-anchor="middle" class="small">if ack then gnt = 00</text>
+  <text x="880" y="250" text-anchor="middle" class="small">else if M0 req then gnt = 01</text>
+  <text x="880" y="280" text-anchor="middle" class="small">else if M1 req then gnt = 10</text>
+  <text x="880" y="310" text-anchor="middle" class="small">else gnt = 00</text>
+
+  <!-- Timing waveform strips -->
+  <rect x="120" y="420" width="1100" height="220" rx="18" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+
+  <text x="170" y="455" class="label">clk</text>
+  <text x="170" y="560" class="label">M0 req</text>
+  <text x="170" y="600" class="label">M1 req</text>
+  <text x="170" y="640" class="label">gnt</text>
+
+  <!-- waveform boxes -->
+  <g>
+    <rect x="260" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="330" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="400" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="470" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="540" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="610" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="680" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="750" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="820" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="890" y="440" width="70" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  </g>
+
+  <g>
+    <rect x="260" y="540" width="250" height="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <rect x="510" y="540" width="160" height="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <rect x="670" y="540" width="180" height="20" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  </g>
+
+  <g>
+    <rect x="260" y="580" width="110" height="20" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <rect x="370" y="580" width="260" height="20" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <rect x="630" y="580" width="170" height="20" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  </g>
+
+  <g>
+    <rect x="260" y="620" width="200" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="460" y="620" width="260" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <rect x="720" y="620" width="80" height="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  </g>
+
+  <text x="315" y="700" class="small">M0 wins first, then brokered release, then M1 may win</text>
+
+</svg>

@@ -1,0 +1,128 @@
+<svg width="1400" height="820" viewBox="0 0 1400 820" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#2a3f5f"/>
+    </marker>
+    <style>
+      .title { font: 700 28px Arial, sans-serif; fill: #1f2937; }
+      .label { font: 600 18px Arial, sans-serif; fill: #1f2937; }
+      .small { font: 500 15px Arial, sans-serif; fill: #374151; }
+      .box { fill: #eef6ff; stroke: #2a5d9f; stroke-width: 2; }
+      .box2 { fill: #f0fdf4; stroke: #2f8f5b; stroke-width: 2; }
+      .box3 { fill: #fff7ed; stroke: #c76a00; stroke-width: 2; }
+      .box4 { fill: #fdf2f8; stroke: #be185d; stroke-width: 2; }
+      .line { stroke: #2a3f5f; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .thin { stroke: #506680; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="700" y="45" text-anchor="middle" class="title">System Bus Architecture</text>
+
+  <!-- Masters -->
+  <rect x="80" y="120" width="250" height="150" rx="12" class="box"/>
+  <text x="205" y="160" text-anchor="middle" class="label">Master 0</text>
+  <text x="205" y="190" text-anchor="middle" class="small">req</text>
+  <text x="205" y="214" text-anchor="middle" class="small">we</text>
+  <text x="205" y="238" text-anchor="middle" class="small">addr</text>
+  <text x="205" y="262" text-anchor="middle" class="small">wdata</text>
+
+  <rect x="80" y="420" width="250" height="150" rx="12" class="box"/>
+  <text x="205" y="460" text-anchor="middle" class="label">Master 1</text>
+  <text x="205" y="490" text-anchor="middle" class="small">req</text>
+  <text x="205" y="514" text-anchor="middle" class="small">we</text>
+  <text x="205" y="538" text-anchor="middle" class="small">addr</text>
+  <text x="205" y="562" text-anchor="middle" class="small">wdata</text>
+
+  <!-- Arbiter -->
+  <rect x="430" y="220" width="250" height="190" rx="12" class="box2"/>
+  <text x="555" y="255" text-anchor="middle" class="label">Arbiter</text>
+  <text x="555" y="290" text-anchor="middle" class="small">Fixed priority</text>
+  <text x="555" y="314" text-anchor="middle" class="small">M0 &gt; M1</text>
+  <text x="555" y="338" text-anchor="middle" class="small">grant signal</text>
+  <text x="555" y="362" text-anchor="middle" class="small">gnt[1:0]</text>
+
+  <!-- Bus Mux -->
+  <rect x="760" y="220" width="250" height="190" rx="12" class="box3"/>
+  <text x="885" y="255" text-anchor="middle" class="label">Bus Mux</text>
+  <text x="885" y="290" text-anchor="middle" class="small">Selects the</text>
+  <text x="885" y="314" text-anchor="middle" class="small">granted master</text>
+  <text x="885" y="338" text-anchor="middle" class="small">drives shared bus</text>
+  <text x="885" y="362" text-anchor="middle" class="small">addr / data / we</text>
+
+  <!-- Address Decoder -->
+  <rect x="1090" y="220" width="240" height="190" rx="12" class="box4"/>
+  <text x="1210" y="255" text-anchor="middle" class="label">Address Decoder</text>
+  <text x="1210" y="290" text-anchor="middle" class="small">14-bit address</text>
+  <text x="1210" y="314" text-anchor="middle" class="small">map to slave</text>
+  <text x="1210" y="338" text-anchor="middle" class="small">sel[2:0]</text>
+  <text x="1210" y="362" text-anchor="middle" class="small">unmapped flag</text>
+
+  <!-- Slaves -->
+  <rect x="700" y="520" width="220" height="160" rx="12" class="box2"/>
+  <text x="810" y="555" text-anchor="middle" class="label">Slave 0</text>
+  <text x="810" y="585" text-anchor="middle" class="small">0x0000 - 0x0FFF</text>
+  <text x="810" y="610" text-anchor="middle" class="small">4 KB RAM</text>
+  <text x="810" y="635" text-anchor="middle" class="small">ack + rdata</text>
+
+  <rect x="960" y="520" width="220" height="160" rx="12" class="box2"/>
+  <text x="1070" y="555" text-anchor="middle" class="label">Slave 1</text>
+  <text x="1070" y="585" text-anchor="middle" class="small">0x1000 - 0x1FFF</text>
+  <text x="1070" y="610" text-anchor="middle" class="small">4 KB RAM</text>
+  <text x="1070" y="635" text-anchor="middle" class="small">ack + rdata</text>
+
+  <rect x="1220" y="520" width="220" height="160" rx="12" class="box2"/>
+  <text x="1330" y="555" text-anchor="middle" class="label">Slave 2</text>
+  <text x="1330" y="585" text-anchor="middle" class="small">0x2000 - 0x27FF</text>
+  <text x="1330" y="610" text-anchor="middle" class="small">2 KB RAM</text>
+  <text x="1330" y="635" text-anchor="middle" class="small">ack + rdata</text>
+
+  <!-- Error path -->
+  <rect x="1180" y="710" width="250" height="70" rx="12" class="box4"/>
+  <text x="1305" y="742" text-anchor="middle" class="label">Unmapped Address</text>
+  <text x="1305" y="766" text-anchor="middle" class="small">err = 1, ack = 1</text>
+
+  <!-- Response path -->
+  <rect x="430" y="560" width="220" height="120" rx="12" class="box3"/>
+  <text x="540" y="595" text-anchor="middle" class="label">Response Path</text>
+  <text x="540" y="625" text-anchor="middle" class="small">ack</text>
+  <text x="540" y="650" text-anchor="middle" class="small">rdata</text>
+  <text x="540" y="670" text-anchor="middle" class="small">err</text>
+
+  <!-- Arrows: masters to arbiter -->
+  <path d="M330 195 L430 195" class="line"/>
+  <path d="M330 495 L430 495" class="line"/>
+
+  <!-- Arbiter to mux -->
+  <path d="M680 315 L760 315" class="line"/>
+
+  <!-- Mux to decoder -->
+  <path d="M1010 315 L1090 315" class="line"/>
+
+  <!-- Decoder to slaves -->
+  <path d="M1210 410 L1210 480 L810 480 L810 520" class="thin"/>
+  <path d="M1210 410 L1210 480 L1070 480 L1070 520" class="thin"/>
+  <path d="M1210 410 L1210 480 L1330 480 L1330 520" class="thin"/>
+
+  <!-- Decoder to error -->
+  <path d="M1210 410 L1210 710" class="thin"/>
+
+  <!-- Slaves and error to response -->
+  <path d="M810 680 L810 710 L650 710 L650 560" class="thin"/>
+  <path d="M1070 680 L1070 700 L650 700 L650 560" class="thin"/>
+  <path d="M1330 680 L1330 710 L650 710 L650 560" class="thin"/>
+
+  <!-- Response back to masters -->
+  <path d="M430 620 L330 620" class="line"/>
+  <path d="M430 620 L330 620" class="line" transform="translate(0, 0)"/>
+
+  <!-- Small labels -->
+  <text x="355" y="180" class="small">request</text>
+  <text x="355" y="480" class="small">request</text>
+  <text x="700" y="300" class="small">grant</text>
+  <text x="1035" y="300" class="small">selected bus</text>
+  <text x="1145" y="480" class="small">sel[0]</text>
+  <text x="1175" y="480" class="small">sel[1]</text>
+  <text x="1285" y="480" class="small">sel[2]</text>
+  <text x="1238" y="690" class="small">unmapped</text>
+
+</svg>
