@@ -1,164 +1,180 @@
 # System Bus Architecture
 
-This repository implements a shared-memory system bus for a simple digital design assignment. The design contains two masters, a fixed-priority arbiter, a shared data/address bus, an address decoder, and three memory-mapped slave regions. The implementation is written in Amaranth HDL and also exported to synthesizable Verilog.
+This repository contains an Amaranth HDL implementation of a small shared-memory system bus for a digital design assignment. The design models a two-master, three-slave bus with fixed-priority arbitration, address decoding, read/write memory access, and error signaling for unmapped addresses.
 
-The project is designed to model a hardware bus architecture similar to a small embedded SoC interconnect, with:
+## Overview
 
-- two requesters (masters)
-- one shared bus
-- three address-mapped slave blocks
-- fixed-priority arbitration (Master 0 has higher priority than Master 1)
-- read/write transactions with acknowledgement and error signaling
+The implementation in `amaranth_bus.py` builds a synthesizable bus structure with:
 
-## Project purpose
+- 2 masters
+- 1 shared bus interconnect
+- 3 memory-mapped slave RAM blocks
+- 1 fixed-priority arbiter
+- 1 address decoder
+- asynchronous reset and synchronous clock domain logic
+- automatic Verilog export for downstream hardware flows
 
-This assignment focuses on:
+The bus operates on:
 
-- bus arbitration and grant control
-- memory-mapped address decoding
-- slave selection and data routing
-- write/read transactions with bus-level handshake behavior
-- simulation-based verification and waveform generation
-- exporting the design into Verilog for downstream FPGA/ASIC flow compatibility
+- 14-bit address bus
+- 8-bit data bus
+- fixed-priority arbitration where Master 0 has priority over Master 1
 
-## Bus architecture summary
-
-The top-level structure is:
-
-- Master 0
-- Master 1
-- Arbiter
-- Shared bus mux
-- Address decoder
-- Slave 0 (4 KB)
-- Slave 1 (4 KB)
-- Slave 2 (2 KB)
-- Response path (`ack`, `rdata`, `err`)
-
-The architecture is essentially:
+## Block-level architecture
 
 ```text
 Master 0 ─┐
-          ├─> Arbiter ─> Shared bus ─> Address Decoder ─> Slave 0 / Slave 1 / Slave 2
-Master 1 ─┘                                              │
-                                                        └─> Response: rdata + ack + err
+          ├─> Arbiter ─> Shared bus mux ─> Address decoder ─> Slave 0 / Slave 1 / Slave 2
+Master 1 ─┘                                                 │
+                                                            └─> Response: ack + rdata + err
 ```
 
-## Address map
+The design consists of these implementation blocks:
 
-The system uses a 14-bit address bus and 8-bit data bus.
+- `Arbiter`: decides which master gets access to the shared bus
+- `AddressDecoder`: decodes the 14-bit address and selects the appropriate slave
+- `Slave`: memory-backed RAM slave with synchronous read/write behavior
+- `SystemBus`: top-level interconnect that combines arbitration, muxing, selection, and response generation
+
+## Address map and memory layout
+
+The decoder checks the following mapped regions:
 
 - `0x0000 - 0x0FFF` → Slave 0 (4 KB)
 - `0x1000 - 0x1FFF` → Slave 1 (4 KB)
 - `0x2000 - 0x27FF` → Slave 2 (2 KB)
-- any other address → unmapped; `err` is asserted and the bus responds with `ack`
+- anything else → unmapped address
 
-## Signal behavior
+Slave 2 is smaller because it uses 11 address bits (`2 KB` range), while Slave 0 and Slave 1 use 12-bit addresses (`4 KB` each).
 
-Each master drives the following interface signals:
+## Bus protocol
 
-- `req` — request to use the bus
+Each master presents the following signals:
+
+- `req` — request to access the bus
 - `we` — write enable
-- `addr` — address for the transaction
+- `addr` — target address
 - `wdata` — write data
 
-The bus returns:
+The bus responds with:
 
-- `gnt` — grant signal for the current master
-- `ack` — transaction completion/handshake signal
-- `rdata` — read data returned from the selected slave
-- `err` — set when an unmapped address is accessed
+- `gnt` — grant to the active master
+- `ack` — transaction completion pulse/handshake
+- `rdata` — data returned from the selected slave
+- `err` — asserted for unmapped addresses
 
-## Arbitration policy
+The actual transfer flow is:
 
-The arbiter is a fixed-priority controller:
+1. A master asserts `req` and drives `we`, `addr`, and `wdata`
+2. The arbiter grants the bus to one master using fixed priority
+3. The granted master drives the shared bus signals
+4. The decoder maps the address to a valid slave
+5. The selected slave performs the read/write operation
+6. The response path returns `ack`, `rdata`, and `err`
 
-- `M0` has priority over `M1`
+## Arbitration behavior
+
+The arbiter is implemented as a fixed-priority controller:
+
+- `M0` has higher priority than `M1`
 - no pre-emption occurs once a master is granted the bus
-- the grant is released when the acknowledged transfer completes
-- after release, the next request can be serviced
+- the grant is released after the current transfer is acknowledged
+- if both masters request simultaneously, Master 0 wins
 
-This is implemented in the `Arbiter` block in `amaranth_bus.py`.
-
-## Slave model
-
-The system includes three memory-mapped RAM slaves:
-
-- each slave is a small synchronous RAM block
-- a write operation stores to memory
-- a read operation returns the previously stored value
-- the read data is valid alongside the acknowledgement signal
-- each access is acknowledged in a one-cycle pulse-like handshake pattern
+This behavior is enforced in `Arbiter.elaborate()` and validated by the self-checking tests in `amaranth_bus.py`.
 
 ## Error handling
 
-If the address is outside the valid ranges:
+If an access address does not match any valid slave region:
 
-- no slave is selected
-- `unmapped` is asserted in the decoder
-- the bus raises `err = 1`
+- the decoder sets `unmapped = 1`
+- the bus asserts `err = 1`
 - the transaction still completes with `ack = 1`
 
-This makes the design robust for invalid memory access patterns and helps verify bus correctness in simulation.
+This allows invalid addresses to be detected and tested without breaking the transaction flow.
 
-## Design files
+## Implementation details from the code
 
-### Source implementation
+The Python implementation is not just a diagram; it is synthesizable hardware logic written in Amaranth.
 
-- `amaranth_bus.py` — main Amaranth HDL implementation of the system bus
-- `system_bus.v` — generated Verilog export from the Amaranth design
+### `Arbiter`
 
-### Documentation and diagrams
+The arbiter is a synchronous state machine with one-hot grant bits:
 
-- `ARCHITECTURE.md` — architecture description and data flow summary
-- `DIAGRAMS.md` — list of generated diagrams
-- `system-bus-architecture.svg` — top-level block diagram
-- `memory-map.svg` — memory map and decoder view
-- `transaction-timing.svg` — request/grant/ack timing overview
-- `arbiter-timing.svg` — arbiter timing illustration
-- `read-write-flow.svg` — read and write flow diagram
-- `control-fsm.svg` — controller state view
+- input signals: `req[0]`, `req[1]`, `ack`
+- output: `gnt[0:1]`
+- behavior:
+  - if a transfer is acknowledged, the grant is cleared
+  - if the current granted master still requests, it keeps the grant
+  - otherwise, the highest-priority active request wins
 
-### Additional artifact files
+### `AddressDecoder`
 
-- `EN5102-AssignSysBus.pdf` — assignment specification or reference material
-- `out/` — generated simulation outputs and exported Verilog artifacts
-- `two_masters.vcd` — waveform capture for the two-master testbench
+The decoder explicitly checks address boundaries:
+
+- `0x0000 <= addr <= 0x0FFF` → slave 0
+- `0x1000 <= addr <= 0x1FFF` → slave 1
+- `0x2000 <= addr <= 0x27FF` → slave 2
+- no match → `unmapped`
+
+### `Slave`
+
+Each slave is a RAM block implemented using Amaranth's `Memory` primitive:
+
+- `read_port()` provides synchronous memory read
+- `write_port()` handles writes when `sel & we` is active
+- `ack` is a one-cycle pulse following selection
+- `rdata` is valid together with the acknowledgement
+
+### `SystemBus`
+
+The top-level module combines all of the above:
+
+- masters drive request and data signals
+- a bus mux routes the granted master's address and data to the shared bus
+- the decoder selects the active slave
+- the selected slave performs the read/write
+- the response path returns `rdata`, `ack`, and `err`
+- `m_gnt` and `m_ack` are exposed per master
+
+## Repository contents
+
+- `amaranth_bus.py` — main HDL implementation and verification testbench
+- `system_bus.v` — generated Verilog export from the Amaranth model
+- `ARCHITECTURE.md` — architecture description
+- `DIAGRAMS.md` — diagram references
+- `README.md` — repository overview
+- `out/` — generated VCD waveforms and exported HDL artifacts
+- `*.svg` — timing and block diagrams
+- `EN5102-AssignSysBus.pdf` — assignment reference material
 
 ## Simulation and verification
 
-The project includes self-checking verification routines in `amaranth_bus.py`.
+`amaranth_bus.py` contains a self-checking test suite that runs when the file is executed.
 
-Running the Python file executes the following checks:
+The script validates:
 
-1. Arbiter behavior tests
-2. Address decoder tests
-3. Reset behavior tests
-4. Idle-state tests
-5. Single-master transaction tests
-6. Two-master arbitration tests
+1. arbiter behavior
+2. address decoder correctness
+3. synchronous/asynchronous reset behavior
+4. idle-state operation
+5. single-master transactions
+6. two-master arbitration
 7. Verilog export
 
-The tests validate:
+The testbench includes waveform generation to the `out/` directory.
 
-- correct grant selection
-- fixed-priority arbitration rules
-- correct address decoding
-- proper read-after-write behavior
-- correct unmapped address handling
-- correct operation under reset conditions
-
-## Running the design
+## Running the project
 
 ### Prerequisites
 
-Install Python and the Amaranth HDL package:
+Install Amaranth:
 
 ```bash
 python3 -m pip install amaranth
 ```
 
-### Execute the project
+### Run the design
 
 From the repository root:
 
@@ -166,48 +182,25 @@ From the repository root:
 python3 amaranth_bus.py
 ```
 
-This script will:
+This will:
 
-- run the testbench suite
-- generate VCD waveforms in the `out/` directory
-- export the module as Verilog into `out/system_bus.v`
+- run the simulation tests
+- generate VCD waveforms in `out/`
+- export the design to `out/system_bus.v`
 
-## Output directory
+## Generated outputs
 
-The `out/` directory contains generated waveform and Verilog artifacts used for verification and implementation export.
+The `out/` directory contains simulation artifacts such as:
 
-## Implementation notes
+- `idle.vcd`
+- `single_master.vcd`
+- `two_masters.vcd`
+- `system_bus.v`
 
-This is a synthesizable hardware model written in Amaranth, which means the same Python description can be:
+## Notes
 
-- simulated for behavioral validation
-- converted to Verilog for FPGA or ASIC toolchains
-- used as a structured hardware design reference
-
-The design intentionally keeps the bus simple and explicit so that the bus protocol, memory map, arbitration behavior, and error handling can be followed easily.
-
-## Typical use case
-
-This implementation is suitable for learning and demonstrating:
-
-- memory-mapped bus arbitration
-- slave selection logic
-- interconnect design patterns
-- HDL simulation and verification workflow
-- hardware-software architecture concepts for shared buses
-
-## Repository status
-
-This repository is a compact HDL project demonstrating a practical digital system bus design, with both modeling and verification included in the same source tree.
-
-## License and usage
-
-This project is provided as an academic/design assignment artifact. Use it for study, demonstration, and learning about bus architecture, arbitration, and HDL design.
+This project is intentionally simple and explicit so the bus protocol, arbitration logic, memory map, and verification flow are easy to follow. It demonstrates how a small shared-memory bus can be modeled and tested in a hardware-description language before exporting to Verilog for synthesis or FPGA workflows.
 
 ## Quick summary
 
-If you need the shortest description of the repository: it is an Amaranth-based two-master, three-slave shared-memory bus architecture with fixed-priority arbitration, 14-bit address decoding, 8-bit data transfers, acknowledgment signaling, and unmapped-address error handling.
-
----
-
-For more detail on the block-level organization, see `ARCHITECTURE.md` and `DIAGRAMS.md`.
+This repository implements a compact Amaranth-based system bus with two masters, three memory-mapped slaves, fixed-priority arbitration, a 14-bit address decoder, and read/write acknowledgement/error handling suitable for digital design learning and HDL verification.
