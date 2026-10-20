@@ -2,44 +2,52 @@
 
 This repository implements a shared memory bus with two masters and three slave memory regions.
 
-```mermaid
-flowchart LR
-    subgraph Masters["Masters"]
-        M0["Master 0\nreq, we, addr, wdata"]
-        M1["Master 1\nreq, we, addr, wdata"]
-    end
+```text
++-------------------+       +---------------------+       +---------------------+
+| Master 0          |       | Master 1            |       |                     |
+| req, we, addr,    |       | req, we, addr,      |       |                     |
+| wdata             |       | wdata               |       |                     |
++---------+---------+       +----------+----------+       |                     |
+          |                              |                          |
+          |                              |                          |
+          v                              v                          v
+   +-------------------+      +-------------------+      +-------------------+
+   | Arbiter           |----->| Bus Mux           |----->| Address Decoder  |
+   | Fixed priority    |      | Selects granted   |      | 14-bit address    |
+   | M0 > M1           |      | master            |      | -> slave select   |
+   +-------------------+      +-------------------+      +---------+---------+
+                                                                        |
+                        +-------------------------------------------+-------------------------------------------+
+                        |                                                                                 |
+                        v                                                                                 v
+           +-----------------------+                          +-----------------------+      +---------------------------+
+           | Slave 0               |                          | Slave 1               |      | Slave 2                   |
+           | 0x0000 - 0x0FFF       |                          | 0x1000 - 0x1FFF      |      | 0x2000 - 0x27FF          |
+           | 4 KB                  |                          | 4 KB                  |      | 2 KB                     |
+           +-----------+-----------+                          +-----------+-----------+      +------------+------------+
+                       |                                                      |                               |
+                       |                                                      |                               |
+                       +-----------------------------+----------------------------+-------------------------------+
+                                                         |
+                                                         v
+                                            +---------------------------+
+                                            | Response Path            |
+                                            | rdata + ack + err        |
+                                            +---------------------------+
+                                                         |
+                                                         |
+                                                         +---------------------------+
+                                                                     |
+                                                                     v
+                                                       +-------------------+
+                                                       | Masters receive  |
+                                                       | ack / rdata      |
+                                                       +-------------------+
 
-    Arb["Arbiter\nFixed priority: M0 > M1\nGrant signal"]
-    BusMux["Bus Mux\nSelects the granted master"]
-    Dec["Address Decoder\n14-bit address -> slave select"]
 
-    subgraph Slaves["Slave Memory Blocks"]
-        S0["Slave 0\n0x0000 - 0x0FFF\n4 KB"]
-        S1["Slave 1\n0x1000 - 0x1FFF\n4 KB"]
-        S2["Slave 2\n0x2000 - 0x27FF\n2 KB"]
-        Err["Unmapped address\nerr = 1, ack = 1"]
-    end
-
-    Res["Response Path\nrdata + ack"]
-
-    M0 -->|request| Arb
-    M1 -->|request| Arb
-
-    Arb -->|grant (gnt)| BusMux
-    BusMux -->|selected addr / data / we| Dec
-
-    Dec -->|sel[0]| S0
-    Dec -->|sel[1]| S1
-    Dec -->|sel[2]| S2
-    Dec -->|unmapped| Err
-
-    S0 -->|ack / rdata| Res
-    S1 -->|ack / rdata| Res
-    S2 -->|ack / rdata| Res
-    Err -->|ack / err| Res
-
-    Res -->|ack / rdata| M0
-    Res -->|ack / rdata| M1
+Unmapped address behavior:
+- If address is outside the valid ranges, the decoder selects no slave.
+- The system raises err = 1 and ack = 1.
 ```
 
 ## Bus behavior
