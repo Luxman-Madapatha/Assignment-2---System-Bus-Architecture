@@ -1,0 +1,59 @@
+<svg width="1300" height="760" viewBox="0 0 1300 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#1f2937"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #111827; }
+      .label { font: 700 20px Arial, sans-serif; fill: #111827; }
+      .small { font: 500 16px Arial, sans-serif; fill: #374151; }
+      .box { fill: #eef6ff; stroke: #2563eb; stroke-width: 2; }
+      .box2 { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+      .box3 { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
+      .box4 { fill: #fdf2f8; stroke: #db2777; stroke-width: 2; }
+      .line { stroke: #1f2937; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="650" y="42" text-anchor="middle" class="title">Read and Write Flow</text>
+
+  <!-- write flow -->
+  <rect x="100" y="120" width="240" height="220" rx="12" class="box"/>
+  <text x="220" y="155" text-anchor="middle" class="label">Write Transaction</text>
+  <text x="220" y="195" text-anchor="middle" class="small">1. Master asserts req</text>
+  <text x="220" y="225" text-anchor="middle" class="small">2. Arbiter grants bus</text>
+  <text x="220" y="255" text-anchor="middle" class="small">3. Data and address driven</text>
+  <text x="220" y="285" text-anchor="middle" class="small">4. Decoder selects slave</text>
+  <text x="220" y="315" text-anchor="middle" class="small">5. Slave writes memory</text>
+
+  <rect x="430" y="120" width="240" height="220" rx="12" class="box2"/>
+  <text x="550" y="155" text-anchor="middle" class="label">Read Transaction</text>
+  <text x="550" y="195" text-anchor="middle" class="small">1. Master asserts req</text>
+  <text x="550" y="225" text-anchor="middle" class="small">2. Arbiter grants bus</text>
+  <text x="550" y="255" text-anchor="middle" class="small">3. Decoder selects slave</text>
+  <text x="550" y="285" text-anchor="middle" class="small">4. RAM reads selected word</text>
+  <text x="550" y="315" text-anchor="middle" class="small">5. rdata + ack returned</text>
+
+  <!-- shared bus -->
+  <rect x="760" y="120" width="260" height="220" rx="12" class="box3"/>
+  <text x="890" y="155" text-anchor="middle" class="label">Shared Bus</text>
+  <text x="890" y="195" text-anchor="middle" class="small">addr</text>
+  <text x="890" y="225" text-anchor="middle" class="small">we</text>
+  <text x="890" y="255" text-anchor="middle" class="small">wdata</text>
+  <text x="890" y="285" text-anchor="middle" class="small">rdata</text>
+  <text x="890" y="315" text-anchor="middle" class="small">ack / err</text>
+
+  <!-- flow arrows -->
+  <path d="M340 230 L430 230" class="line"/>
+  <path d="M670 230 L760 230" class="line"/>
+  <path d="M1020 230 L1120 230 L1120 500 L980 500" class="line"/>
+
+  <!-- bottom summary -->
+  <rect x="120" y="430" width="1060" height="220" rx="12" class="box4"/>
+  <text x="650" y="470" text-anchor="middle" class="label">Behavior Summary</text>
+  <text x="650" y="520" text-anchor="middle" class="small">Write: request → grant → address/data on bus → slave writes → acknowledgement</text>
+  <text x="650" y="555" text-anchor="middle" class="small">Read: request → grant → address read → slave returns rdata and ack</text>
+  <text x="650" y="590" text-anchor="middle" class="small">Invalid address: no slave selected → err = 1 and ack = 1</text>
+  <text x="650" y="625" text-anchor="middle" class="small">This matches the implementation in the Amaranth model and exported Verilog</text>
+
+</svg>
