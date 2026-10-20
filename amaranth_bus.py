@@ -39,9 +39,13 @@ class Arbiter(Elaboratable):
 
     def elaborate(self, platform):
         m = Module()
-        with m.If(self.ack):  # finished -> free the bus one cycle
+
+        # Acknowledge releases the bus after the current transfer completes.
+        # Keep the existing grant while the active master is still requesting,
+        # unless the transfer has just been acknowledged.
+        with m.If(self.ack):
             m.d.sync += self.gnt.eq(0)
-        with m.Elif((self.gnt & self.req).any()):  # holder still requesting -> keep
+        with m.Elif((self.gnt & self.req).any()):
             pass
         with m.Elif(self.req[0]):
             m.d.sync += self.gnt.eq(0b01)
@@ -54,7 +58,11 @@ class Arbiter(Elaboratable):
 
 # ----------------------------------------------------------------------------- decoder
 class AddressDecoder(Elaboratable):
-    """Pure combinational address decoder."""
+    """Pure combinational address decoder.
+
+    The address ranges are explicitly checked so the decoder remains easy to read and
+    reason about during verification and synthesis.
+    """
 
     def __init__(self):
         self.addr = Signal(ADDR_BITS)  # in
@@ -64,10 +72,15 @@ class AddressDecoder(Elaboratable):
     def elaborate(self, platform):
         m = Module()
         a = self.addr
+
+        slave0 = (a >= 0x0000) & (a <= 0x0FFF)
+        slave1 = (a >= 0x1000) & (a <= 0x1FFF)
+        slave2 = (a >= 0x2000) & (a <= 0x27FF)
+
         m.d.comb += [
-            self.sel[0].eq(a[12:14] == 0b00),  # 0x0000-0x0FFF
-            self.sel[1].eq(a[12:14] == 0b01),  # 0x1000-0x1FFF
-            self.sel[2].eq(a[11:14] == 0b100),  # 0x2000-0x27FF
+            self.sel[0].eq(slave0),
+            self.sel[1].eq(slave1),
+            self.sel[2].eq(slave2),
             self.unmapped.eq(~self.sel.any()),
         ]
         return m
@@ -141,7 +154,17 @@ class SystemBus(Elaboratable):
 
         gnt = arb.gnt
         bus_active = gnt.any()
-        bus_addr, bus_we, bus_wdata = Signal(ADDR_BITS), Signal(), Signal(8)
+        bus_addr = Signal(ADDR_BITS)
+        bus_we = Signal()
+        bus_wdata = Signal(8)
+
+        # The bus is a single shared path, so default values prevent stale data from
+        # persisting when no master holds the grant.
+        m.d.comb += [
+            bus_addr.eq(0),
+            bus_we.eq(0),
+            bus_wdata.eq(0),
+        ]
 
         # ---- bus mux: granted master drives the bus ----
         m.d.comb += arb.req.eq(Cat(*self.m_req))
@@ -176,6 +199,11 @@ class SystemBus(Elaboratable):
         ack = Signal()
         m.d.comb += ack.eq(Cat(*[s.ack for s in slaves]).any() | err_ack)
         m.d.comb += arb.ack.eq(ack)
+
+        m.d.comb += [
+            self.rdata.eq(0),
+            self.err.eq(0),
+        ]
         with m.If(slaves[0].ack):
             m.d.comb += self.rdata.eq(slaves[0].rdata)
         with m.Elif(slaves[1].ack):
